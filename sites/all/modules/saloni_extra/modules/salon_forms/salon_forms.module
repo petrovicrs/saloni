@@ -1,0 +1,324 @@
+<?php
+
+/**
+ * Implements hook_init
+ */
+function salon_forms_init() {
+    if (!path_is_admin(current_path())) {
+        $module_path = drupal_get_path('module', 'salon_forms');
+        drupal_add_css($module_path . '/styles/table.css');
+        drupal_add_css($module_path . '/styles/forms.css');
+        drupal_add_css($module_path . '/styles/pages.css');
+        drupal_add_css($module_path . '/styles/menu.css');
+        drupal_add_css('sites/all/libraries/timepicker/jquery.timepicker.css');
+        drupal_add_js('sites/all/libraries/timepicker/jquery.timepicker.min.js');
+        drupal_add_js($module_path . '/scripts/forms.js');
+
+    }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function salon_forms_menu() {
+    $items = array();
+    /** sisanje **/
+    $items['prikaz-termina-sisanja'] = array(
+        'title' => t('Prikaz termina sisanja'),
+        'page callback' => 'salon_forms_sisanje',
+        'access arguments' => array('administrator admin_lokala'),
+        'type' => MENU_CALLBACK,
+        'file' => 'forms/user_forms/user_form_sisanje.inc.php'
+    );
+    $items['zakazi-termina-sisanja'] = array(
+        'title' => t('Zakazi'),
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_sisanje_zakazi_form'),
+        'file' => 'forms/user_forms/user_form_sisanje.inc.php',
+        'access arguments' => array('administrator admin_lokala'),
+        'type' => MENU_NORMAL_ITEM,
+    );
+
+    /** kozmeticar **/
+    $items['prikaz-termina-kozmeticara'] = array(
+        'title' => t('Prikaz termina kozmeticara'),
+        'page callback' => 'salon_forms_kozmeticar',
+        'access arguments' => array('administer admin_lokala'),
+        'type' => MENU_CALLBACK,
+        'file' => 'forms/user_forms/user_form_kozmeticar.inc.php'
+    );
+
+    /** solarijum **/
+    $items['prikaz-termina-solarijuma'] = array(
+        'title' => t('Prikaz termina solarijuma'),
+        'page callback' => 'salon_forms_solarijuma',
+        'access arguments' => array('administrator admin_lokala'),
+        'type' => MENU_CALLBACK,
+        'file' => 'forms/user_forms/user_form_solarijuma.inc.php'
+    );
+
+    /** masaza **/
+    $items['prikaz-termina-masaze'] = array(
+        'title' => t('Prikaz termina masaze'),
+        'page callback' => 'salon_forms_masaza',
+        'access arguments' => array('administrator admin_lokala'),
+        'type' => MENU_CALLBACK,
+        'file' => 'forms/user_forms/user_form_masaza.inc.php'
+    );
+
+    /** klijenti **/
+    $items['klijenti'] = array(
+        'title' => t('Klijenti'),
+        'page callback' => 'salon_forms_clients',
+        'access arguments' => array('administrator admin_lokala'),
+        'type' => MENU_CALLBACK,
+        'file' => 'forms/user_forms/user_form_clients.inc.php'
+    );
+    $items['klijenti/add'] = array(
+        'title' => t('Add client'),
+        'type' => MENU_CALLBACK,
+        'weight' => 1,
+        'file' => 'forms/user_forms/user_form_clients.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_clients_add'),
+        'access arguments' => array('administrator admin_lokala'),
+    );
+    $items['klijenti/edit/%'] = array(
+        'title' => t('Edit client'),
+        'weight' => 2,
+        'file' => 'forms/user_forms/user_form_clients.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_clients_edit', 2),
+        'access arguments' => array('administrator admin_lokala'),
+    );
+    $items['klijenti/delete/%'] = array(
+        'title' => t('Edit client'),
+        'weight' => 3,
+        'file' => 'forms/user_forms/user_form_clients.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_clients_delete', 2),
+        'access arguments' => array('administrator admin_lokala'),
+    );
+    $items['klijenti/autocomplete'] = array(
+        'title' => '',
+        'page callback' => '_client_autocomplete',
+        'access arguments' => array('administrator admin_lokala'),
+        'file' => 'forms/user_forms/user_form_clients.inc.php',
+        'type' => MENU_CALLBACK
+    );
+    /** Firma forms **/
+    $items['admin/saloon'] = array(
+        'title' => t('Saloon'),
+        'position' => 'left',
+        'weight' => 50,
+        'page callback' => 'salon_forms_admin_saloon',
+        'access arguments' => array('administer admin_firme'),
+        'type' => MENU_NORMAL_ITEM,
+    );
+    /** employees **/
+    $items['admin/saloon/employees'] = array(
+        'title' => t('Employees'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 0,
+        'description' => t('Employees administration page'),
+        'file' => 'forms/admin/employees_form.inc.php',
+        'page callback' => 'salon_forms_admin_employees',
+        'access arguments' => array('administer admin_firme'),
+    );
+    $items['admin/saloon/employees/add'] = array(
+        'title' => t('Add employee'),
+        'type' => MENU_LOCAL_ACTION,
+        'weight' => 1,
+        'file' => 'forms/admin/employees_form.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_admin_employees_add'),
+        'access arguments' => array('administer admin_firme'),
+    );
+    $items['admin/saloon/employees/edit/%'] = array(
+        'title' => t('Edit employee'),
+        'weight' => 2,
+        'file' => 'forms/admin/employees_form.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_admin_employees_edit', 4),
+        'access arguments' => array('administer admin_firme'),
+    );
+    $items['admin/saloon/employees/delete/%'] = array(
+        'title' => t('Edit employee'),
+        'weight' => 3,
+        'file' => 'forms/admin/employees_form.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_admin_employees_delete', 4),
+        'access arguments' => array('administer admin_firme'),
+    );
+    /** employees end **/
+    /*-------------------------------------------------------------------------------------------------*/
+    /** services **/
+    $items['admin/saloon/services'] = array(
+        'title' => t('Services'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 4,
+        'description' => t('Services administration page'),
+        'file' => 'forms/admin/services_form.inc.php',
+        'page callback' => 'salon_forms_admin_services',
+        'access arguments' => array('administer admin_firme'),
+    );
+    $items['admin/saloon/services/add'] = array(
+        'title' => t('Service add'),
+        'type' => MENU_LOCAL_ACTION,
+        'weight' => 6,
+        'description' => t('Services administration page'),
+        'file' => 'forms/admin/services_form.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_admin_services_add'),
+        'access arguments' => array('administer admin_firme'),
+    );
+    $items['admin/saloon/services/edit/%'] = array(
+        'title' => t('Edit service'),
+        'weight' => 7,
+        'description' => t('Services edit administration page'),
+        'file' => 'forms/admin/services_form.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_admin_services_edit', 4),
+        'access arguments' => array('administer admin_firme'),
+    );
+    $items['admin/saloon/services/delete/%'] = array(
+        'title' => t('Delete service'),
+        'weight' => 8,
+        'description' => t('Services delete administration page'),
+        'file' => 'forms/admin/services_form.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_admin_services_delete', 4),
+        'access arguments' => array('administer admin_firme'),
+    );
+
+    /** group of services **/
+    $items['admin/saloon/services/groups'] = array(
+        'title' => t('Group of services'),
+        'type' => MENU_LOCAL_ACTION,
+        'weight' => 9,
+        'description' => t('Group services administration page'),
+        'file' => 'forms/admin/group_services_form.inc.php',
+        'page callback' => 'salon_forms_admin_group_services',
+        'access arguments' => array('administer admin_firme'),
+    );
+    $items['admin/saloon/services/groups/add'] = array(
+        'title' => t('Services group add'),
+        'type' => MENU_LOCAL_ACTION,
+        'weight' => 10,
+        'description' => t('Group services administration page'),
+        'file' => 'forms/admin/group_services_form.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_admin_group_services_add'),
+        'access arguments' => array('administer admin_firme'),
+    );
+    $items['admin/saloon/services/groups/edit/%'] = array(
+        'title' => t('Edit group of services'),
+        'weight' => 11,
+        'description' => t('Group services edit administration page'),
+        'file' => 'forms/admin/group_services_form.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_admin_group_services_edit', 5),
+        'access arguments' => array('administer admin_firme'),
+    );
+    $items['admin/saloon/services/groups/delete/%'] = array(
+        'title' => t('Delete group of services'),
+        'weight' => 12,
+        'description' => t('Group services delete administration page'),
+        'file' => 'forms/admin/group_services_form.inc.php',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_admin_group_services_delete', 5),
+        'access arguments' => array('administer admin_firme'),
+    );
+
+    //------------------------------------------------------------
+    /** report **/
+    $items['admin/saloon/report'] = array(
+        'title' => t('Report'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 5,
+        'description' => t('Report administration page'),
+        'file' => 'forms/admin/report_form.inc.php',
+        'page callback' => 'salon_forms_admin_report',
+        'access arguments' => array('administer admin_firme'),
+    );
+    $items['admin/saloon/statistics'] = array(
+        'title' => t('Statistics'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 6,
+        'description' => t('Statistics administration page'),
+        'file' => 'forms/admin/statistics_form.inc.php',
+        'page callback' => 'salon_forms_admin_statistics',
+        'access arguments' => array('administer admin_firme'),
+    );
+    $items['admin/saloon/settings'] = array(
+        'title' => t('Settings'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 7,
+        'description' => t('Settings administration page'),
+        'file' => 'forms/admin/settings_form.inc.php',
+        'page callback' => 'salon_forms_admin_settings',
+        'access arguments' => array('administer admin_firme'),
+    );
+    return $items;
+}
+
+function salon_forms_admin_saloon() {
+    $page = [];
+    $path = 'admin/saloon';
+    $parent = menu_link_get_preferred($path);
+    $parameters = array(
+        'active_trail' => array($parent['plid']),
+        'only_active_trail' => FALSE,
+        'min_depth' => $parent['depth'] + 1,
+        'max_depth' => $parent['depth'] + 1,
+        'conditions' => array('plid' => $parent['mlid']),
+    );
+    $children = menu_build_tree($parent['menu_name'], $parameters);
+    foreach ($children as $key => $child) {
+        $children[$key]['link']['access'] = 1;
+        $children[$key]['link']['hidden'] = 0;
+    }
+    $menu_render = menu_tree_output($children);
+    $page['child-menu'] = array(
+        '#markup' => drupal_render($menu_render),
+    );
+    return $page;
+}
+
+/**
+ * @return DateAndTime
+ */
+function getDateFromParameters() {
+    $params = drupal_get_query_parameters();
+    $date = isset($params['date']) ? explode('-', $params['date']) : [];
+    $year = isset($date[0]) ? intval($date[0]) : DateAndTime::now()->getYear();
+    $month = isset($date[1]) ? intval($date[1]) : DateAndTime::now()->getMonth();
+    $day = isset($date[2]) ? intval($date[2]) : DateAndTime::now()->getDay();
+    return DateAndTime::fromYMDString("{$year}-{$month}-{$day}");
+}
+
+function includeModalWindowSettings() {
+    ctools_include('ajax');
+    ctools_include('modal');
+    ctools_modal_add_js();
+    $style = array(
+        'my-modal' => array(
+            'modalSize' => array(
+                'type' => 'fixed',
+                'width' => 600,
+                'height' => 240,
+                'addWidth' => 10,
+                'addHeight' => 10,
+                'contentRight' => 0,
+                'contentBottom' => 0,
+            ),
+            'modalOptions' => array(
+                'opacity' => .6,
+                'background-color' => '#ccc',
+            ),
+            'animation' => 'fadeIn',
+            'closeText' => t('Close'),
+        ),
+    );
+    drupal_add_js($style, 'setting');
+}

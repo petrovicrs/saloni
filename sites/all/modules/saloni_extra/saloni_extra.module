@@ -1,0 +1,28 @@
+<?php
+
+function saloni_extra_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id) {
+    $bundle = isset($form['#bundle']) ? $form['#bundle'] : null;
+    $action = arg(4);
+    if ($bundle == 'firme' && $action == 'add') {
+        $form['#submit'][] = 'saloni_extra_add_new_company_submit';
+    }
+}
+
+function saloni_extra_add_new_company_submit(&$form, &$form_state) {
+    $company_name = $form_state['values']['name'];
+    $company_tid = $form_state['values']['tid'];
+    $creator = new CompanyCreator($company_name, $company_tid);
+    $creator->create();
+}
+
+function getUserFirma() {
+    global $user;
+    $fullUser = user_load($user->uid);
+    $idFirme = isset($fullUser, $fullUser->field_term_firma, $fullUser->field_term_firma[LANGUAGE_NONE],
+        $fullUser->field_term_firma[LANGUAGE_NONE][0], $fullUser->field_term_firma[LANGUAGE_NONE][0]['tid']
+    ) ? $fullUser->field_term_firma[LANGUAGE_NONE][0]['tid'] : null;
+    if (!$idFirme) {
+        throw new Exception(t('Nije izabrana firma za user-a, molimo kontaktirajte administratora'));
+    }
+    return $idFirme;
+}

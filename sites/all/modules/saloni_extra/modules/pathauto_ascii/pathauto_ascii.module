@@ -1,0 +1,313 @@
+<?php
+
+/**
+ * @file
+ * Main file for the Pathauto ASCII module, which automatically generates ASCII aliases for content.
+ *
+ * @ingroup pathauto
+ */
+/**
+ * Usefull links:
+ *
+ * http://docs.moodle.org/dev/Table_of_locales
+ *
+ * Generator teksta sa više jezika - http://generator.lorem-ipsum.info/
+ *
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function pathauto_ascii_menu() {
+    $items = array();
+
+    $items['admin/pathauto-ascii/ajax'] = array(
+      'page callback' => 'pathauto_ascii_suggest_alias',
+//     'page arguments' => array(3, 4),
+      'access arguments' => array('suggest pathauto ascii alias'),
+//     'delivery callback' => 'ajax_deliver',
+      'type' => MENU_CALLBACK,
+    );
+
+    $items['admin/config/search/pathauto-ascii'] = array(
+      'type' => MENU_LOCAL_TASK,
+      'title' => t('Pathauto ASCII configuration'),
+      'page callback' => 'pathauto_ascii_config_page',
+      'access arguments' => array('suggest pathauto ascii alias')
+    );
+
+    return $items;
+}
+
+function pathauto_ascii_config_page() {
+    $page['form'] = drupal_get_form('pathauto_ascii_configuration_form');
+
+    return $page;
+}
+
+function pathauto_ascii_configuration_form($form, &$form_state) {
+    $form = array();
+
+    $form['suggest_for_cyrillic'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Check the cyrillic version?'),
+      '#default_value' => variable_get('pathauto_ascii_suggest_for_cyrillic', 1),
+      '#description' => t('If this option is checked then all non latin, non deaccented characters will be disallowed.')
+    );
+
+    $form['show_available_languages'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show available languages?'),
+      '#default_value' => variable_get('pathauto_ascii_show_available_languages', 0),
+      '#description' => t('Check thi option ON if you want to specify which language url suggestion is done from. Necessary for cyrillic languages.')
+    );
+
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save')
+    );
+
+    return $form;
+}
+
+function pathauto_ascii_configuration_form_submit(&$form, &$form_state) {
+    variable_set('pathauto_ascii_suggest_for_cyrillic', $form_state['values']['suggest_for_cyrillic']);
+    variable_set('pathauto_ascii_show_available_languages', $form_state['values']['show_available_languages']);
+    drupal_set_message(t('Saved'));
+}
+
+function pathauto_ascii_permission() {
+    return array(
+      'suggest pathauto ascii alias' => array(
+        'title' => t('Use pathauto alias suggestion')
+      ),
+    );
+}
+
+function pathauto_ascii($alias, $context) {
+    module_load_include('inc', 'pathauto_ascii');
+
+    switch ($context['language']) {
+        case 'sr':
+            $alias = Cyr2ascii::serbianCyr2ascii($alias);
+            break;
+        case 'ru':
+            $alias = Cyr2ascii::russianCyr2ascii($alias);
+            break;
+        case 'bg':
+            $alias = Cyr2ascii::bulgarianCyr2ascii($alias);
+            break;
+        case 'mc':
+            $alias = Cyr2ascii::macedonianCyr2ascii($alias);
+            break;
+        case 'me':
+            $alias = Cyr2ascii::montenegrianCyr2ascii($alias);
+            break;
+        case 'sr-Latn':
+        default:
+            // Avg. time 0.18050813674927
+            if (function_exists('_clear_utf')) {
+                //Timer::start();
+                setlocale(LC_ALL, 'en_US.UTF8');
+                $alias = _clear_utf($alias);
+                //dpm( Timer::stop()->results(), '_clear_utf' );
+            }
+            // Avg. time 0.00019192695617676
+            if (function_exists('_normalize_str')) {
+                //Timer::start();
+                $alias = _normalize_str($alias);
+                //Timer::stop()->result('dpm');
+            }
+
+            break;
+    }
+
+    // Avg. time 4.7922134399414E-5 - Fastest
+    if (function_exists('_remove_accents')) {
+        //Timer::start();
+        $alias = _remove_accents($alias);
+        //Timer::stop()->result('var_dump');
+    }
+
+    return $alias;
+}
+
+/**
+ * Implements hook_pathauto_alias_alter().
+ */
+function pathauto_ascii_pathauto_alias_alter(&$alias, array &$context) {
+    // Don't do pathauto to ASCII conversion if Admin sets it not to
+    $suggest_for_cyrillic = variable_get('pathauto_ascii_suggest_for_cyrillic', 1);
+    if ($suggest_for_cyrillic == 1) {
+        $alias = pathauto_ascii($alias, $context);
+    }
+}
+
+/**
+ * Implements hook_form_node_form_alter().
+ */
+function pathauto_ascii_form_node_form_alter(&$form, &$form_state, $form_id) {
+    module_load_include('inc', 'pathauto_ascii');
+
+    $form['path']['alias']['#element_validate'][] = 'pathauto_ascii_element_path_validation';
+    $form['#attached']['js'][] = drupal_get_path('module', 'pathauto_ascii') . '/pathauto_ascii.js';
+
+    $show_languages = variable_get('pathauto_ascii_show_available_languages', 0);
+    if($show_languages == 1 || empty($form['#node'])) {
+        $form['path']['available_languages'] = array(
+          '#type' => 'select',
+          '#options' => _get_available_transliterable_languages(),
+          '#title' => t('Select language that url is in:')
+        );
+    }
+
+    $form['path']['suggest_alias'] = array(
+      '#prefix' => '<div id="pathauto-ascii-path-alias-wrapper">',
+      '#suffix' => '</div>',
+      '#type' => 'link',
+      '#title' => t('Suggest alias'),
+      '#href' => 'admin/pathauto-ascii/ajax',
+      '#attributes' => array(
+        'id' => 'pathauto-ascii-suggest-alias',
+        'class' => array('pathauto-ascii-ajax'),
+        'data-action' => array('suggest-alias'),
+        'onclick' => 'return false;'
+      ),
+      '#attached' => array(
+        'library' => array(
+          array('system', 'drupal.ajax'),
+        ),
+      )
+    );
+}
+
+/**
+ * Custom user input path element validation
+ */
+function pathauto_ascii_element_path_validation(&$element, &$form_state, $complete_form) {
+    $suggest_for_cyrillic = variable_get('pathauto_ascii_suggest_for_cyrillic', 1);
+    if ($suggest_for_cyrillic == 1) {
+        $path = (object) $form_state['values']['path'];
+
+        if (empty($path->pathauto) && !empty($path->alias)) {
+            if (!pathauto_ascii_is_valid_path($path->alias)) {
+                $element['#prefix'] = '<div id="pathauto-ascii-path-alias-wrapper">';
+                $element['#suffix'] = '</div>';
+
+                $form_state['complete form']['path']['suggest_alias'] = array(
+                  '#type' => 'link',
+                  '#title' => t('Suggest alias'),
+                  '#href' => 'admin/pathauto-ascii/ajax',
+                  '#attributes' => array(
+                    'id' => 'pathauto-ascii-suggest-alias',
+                    'class' => array('pathauto-ascii-ajax'),
+                    'data-action' => array('suggest-alias'),
+                    'onclick' => 'return false;'
+                  ),
+                  '#attached' => array(
+                    'library' => array(
+                      array('system', 'drupal.ajax'),
+                    ),
+                  )
+                );
+
+                $form_state['rebuild'] = TRUE;
+
+                form_error($element, t('The path alias contains invalid characters.'));
+            }
+        }
+    }
+}
+
+/**
+ * Implements hook_form().
+ */
+function pathauto_ascii_ajax_callback($form, &$form_state) {
+    //pathauto_ascii($alias, $context)
+//   dpm($form_state);
+
+    return $form['path']['alias'];
+
+
+    $commands = array();
+    // Remove any pre-existing status messages from a validation failure.
+    $commands[] = ajax_command_remove('.messages');
+
+    if ($messages = theme('status_messages')) {
+        $commands[] = ajax_command_prepend('#pathauto-ascii-path-alias-wrapper', $messages);
+    }
+
+    drupal_add_js(drupal_get_path('module', 'pathauto_ascii') . '/pathauto_ascii.js');
+
+    $argument = array('pathautoAscii' => array('suggestedURL' => 'asd-efg'));
+    $commands[] = ajax_command_settings($argument);
+    $commands[] = ajax_command_invoke('#edit-path-alias', 'pathautoAsciiAlias', $argument);
+
+    return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function pathauto_ascii_suggest_alias() {
+    global $language;
+    module_load_include('inc', 'pathauto');
+    $response = array();
+
+    $lanuages = language_list();
+    if (isset($_POST['language']) && isset($lanuages[$_POST['language']])) {
+        if (isset($_POST['path']['available_languages']) && $_POST['path']['available_languages'] == '_none')
+            $langcode = $lanuages[$_POST['language']]->language;
+        else
+            $langcode = $_POST['path']['available_languages'];
+    }
+
+// Code that is commented was disabling alias suggestion on every click for no known reason.
+
+//    if (isset($_POST['path']['alias']) && !empty($_POST['path']['alias'])) {
+//        $alias = $_POST['path']['alias'];
+//    } else {
+        $alias = !empty($_POST['title']) ? $_POST['title'] : null;
+        if(empty($alias)) drupal_set_message(t('Title must be set!'), 'error');
+//    }
+
+// End of commented code ====================================================================
+
+    //$alias = pathauto_create_alias('pathauto_ascii', 'return', $alias, array());
+    $alias = pathauto_ascii($alias, array('language' => isset($langcode) ? $langcode : $language->language));
+    $alias = pathauto_cleanstring($alias);
+
+    $response['response'] = $alias;
+
+    if (!pathauto_ascii_is_valid_path($alias)) {
+        drupal_set_message(t('The path alias contains invalid characters. Please correct them manually!'), 'error');
+    }
+
+    $response['messages'] = theme('status_messages');
+
+    return drupal_json_output($response);
+    exit();
+}
+
+/**
+ * Check if string contains only ascii characters
+ *
+ * @param string $string
+ * @return boolean
+ *
+ * @see http://pageconfig.com/post/how-to-validate-ascii-text-in-php
+ */
+function pathauto_ascii_is_ascii($string = '') {
+    if (function_exists('mb_detect_encoding')) {
+        // Faster if exists
+        return (bool) mb_detect_encoding($string, 'ASCII', true);
+    }
+    return (bool) !preg_match('/[\\x80-\\xff]+/', $string);
+}
+
+/**
+ * Check if string is valid URL path
+ *
+ * @param string $path
+ * @return boolean
+ */
+function pathauto_ascii_is_valid_path($path = '') {
+    return (bool) !preg_match('/[^a-zA-Z0-9\-_.\/]+/', $path);
+}

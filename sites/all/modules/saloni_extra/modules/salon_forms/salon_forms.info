@@ -1,0 +1,20 @@
+name = Saloon forms
+description = Generate forms.
+core = 7.x
+
+files[] = lib/DateAndTime.class.php
+files[] = lib/TimeSpan.class.php
+files[] = lib/CompanyDatabase.class.php
+files[] = inc/SalonTimeSpanTable.class.php
+files[] = lib/entity/SaloonEntityInterface.class.php
+files[] = lib/entity/SaloonEntity.class.php
+files[] = lib/entity/ClientEntity.class.php
+files[] = lib/entity/EmployeeEntity.class.php
+files[] = lib/entity/EmployeeTypeEntity.class.php
+files[] = lib/entity/ServicesEntity.class.php
+files[] = lib/entity/ServicesGroupEntity.class.php
+files[] = lib/entity/ServicesGroupTypeEntity.class.php
+
+
+
+;configure = admin/config/salon_forms

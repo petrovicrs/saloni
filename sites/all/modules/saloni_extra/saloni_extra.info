@@ -1,0 +1,5 @@
+name = Saloon extra
+description = Generate additional functionalities for saloons.
+core = 7.x
+
+files[] = lib/CompanyCreator.class.php

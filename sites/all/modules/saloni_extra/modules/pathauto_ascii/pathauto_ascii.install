@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for Pathauto.
+ *
+ * @ingroup pathauto
+ */
+
+/**
+ * Implements hook_install().
+ */
+function pathauto_ascii_install() {
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function pathauto_ascii_uninstall() {
+  // Delete all the pathauto ascii variables and then clear the variable cache.
+  db_query("DELETE FROM {variable} WHERE name LIKE 'pathauto_ascii__%'");
+  cache_clear_all('variables', 'cache');
+}

@@ -1,0 +1,470 @@
+<?php
+
+//define('calendar_ADD_TO_CALENDAR_FIELD_TABLE', 'field_data_field_add_to_calendar');
+//define('calendar_FIELD_NAME', 'add_to_calendar');
+//define('calendar_CALENDAR_DATE_FIELD_TABLE', 'field_data_field_date');
+//define('calendar_CALENDAR_DATE_FIELD_NAME', 'date');
+//define('calendar_CONTEXT_DAILY', 'calendar:daily_view_path_context');
+
+/**
+ * Implements hook_menu().
+ *
+ */
+function calendar_menu() {
+  $items = array();
+
+  $items['calendar-navigation'] = array(
+  	'title' => '',
+  	'page callback' => 'calendar_navigation',
+  	'access arguments' => array('access content'),
+  	'type' => MENU_CALLBACK
+  );
+  return $items;
+}
+
+/**
+ * Handles AJAX navigation
+ * @throws Exception
+ */
+function calendar_navigation() {
+	$date = trim(stripcslashes($_POST['date']));
+	$date = explode('-', $date);
+	$language = trim(stripcslashes($_POST['language']));
+	$year = isset($date[0]) ? intval($date[0]) : '';
+	$month = isset($date[1]) ? intval($date[1]) : '';
+	$calendar = theme('calendar', array('year' => $year, 'month' => $month, 'language' => $language));
+	echo json_encode(array('calendar' => $calendar));
+	exit();
+}
+
+/**
+ * Implements hook_block_info()
+ *
+ * @return mixed
+ */
+function calendar_block_info() {
+	$blocks['calendar'] = array(
+		'info' => 'Calendar'
+	);
+	return $blocks;
+}
+
+/**
+ * Implements hook_block_view()
+ *
+ * @param string $delta
+ * @return array
+ * @throws Exception
+ */
+function calendar_block_view($delta = '') {
+	$block = array();
+	switch($delta) {
+		case 'calendar' :
+			$block['subject'] = t('Calendar');
+			$block['content'] = __theme_calendar();
+		break;
+	}
+	return $block;
+}
+
+function __theme_calendar() {
+	global $language;
+	$params = drupal_get_query_parameters();
+	$date = isset($params['date']) ? explode('-', $params['date']) : [];
+	$year = isset($date[0]) ? intval($date[0]) : '';
+	$month = isset($date[1]) ? intval($date[1]) : '';
+	$day = isset($date[2]) ? intval($date[2]) : '';
+	return "<div id='calendar-block-wrapper'>" . theme('calendar', array('year' => $year, 'month' => $month, 'day' => $day, 'language' => $language->language)) . "</div>";
+}
+
+function __calendar_get_available_date($CTtype){
+  global $language;
+  $q = db_select('node', 'n');
+  $q->join('field_data_field_date', 'fd', 'fd.entity_id = n.nid');
+  $q->condition('n.type', $CTtype);
+  $q->condition('n.status', 1);
+  $q->condition('n.language', $language->language);
+  $q->fields('fd', array('field_date_value'));
+  $results = $q->execute()->fetchAll();
+  $return = array();
+  foreach ($results as $res) {
+    $year = date('Y', strtotime($res->field_date_value));
+    $month = date('n', strtotime($res->field_date_value));
+    $return['years'][$year] = $year;
+    $return['months'][$month] = $month;
+  }
+  asort($return['years']);
+  asort($return['months']);
+  return $return;
+}
+
+/**
+ * Implements hook_theme()
+ *
+ * @param $existing
+ * @param $type
+ * @param $theme
+ * @param $path
+ * @return array
+ */
+function calendar_theme($existing, $type, $theme, $path) {
+	return array(
+		'calendar' => array(
+			'variables' => array('month' => '', 'year' => '', 'language' => '')
+		)
+	);
+}
+
+/**
+ * Creates calendar block
+ *
+ * @param $variables
+ * @return string
+ */
+function theme_calendar($variables) {
+    $language = $variables['language'];
+    drupal_add_css(drupal_get_path('module', 'calendar') . '/css/calendar.css');
+	drupal_add_js(drupal_get_path('module', 'calendar') .'/scripts/slimscroll.js');
+	drupal_add_js(drupal_get_path('module', 'calendar') . '/scripts/calendar.js');
+	//Get date
+	$selected_day = null;
+	if(empty($variables['month']) || empty($variables['year']) ) {
+		$date = time();
+	} else {
+		$year = isset($variables['year']) ? intval($variables['year']) : '01';
+		$month = isset($variables['month']) ? intval($variables['month']) : '01';
+		if (isset($variables['day'])) {
+			$day = intval($variables['day']);
+			$selected_day = $day;
+		} else {
+			$day = '01';
+		}
+		$date = strtotime("{$day}-{$month}-{$year}");
+	}
+
+	//This puts the day, month, and year in seperate variables
+	$month = date('m', $date);
+	$year = date('Y', $date);
+	$today_day = date('d', time());
+	$today_month = date('m', time());
+	$today_year = date('Y', time());
+	//Here we generate the first day of the month
+	$first_day = mktime(0, 0, 0, $month, 1, $year);
+
+	//This gets us the month name
+	$title = date('F', $first_day);
+
+	//Here we find out what day of the week the first day of the month falls on
+	$day_of_week = date('D', $first_day);
+
+	//Once we know what day of the week it falls on, we know how many blank days occure before it. If the first day of the week is a Sunday then it would be zero
+	$blank = 0;
+	switch($day_of_week) {
+		case "Mon": $blank = 0; break;
+		case "Tue": $blank = 1; break;
+		case "Wed": $blank = 2; break;
+		case "Thu": $blank = 3; break;
+		case "Fri": $blank = 4; break;
+		case "Sat": $blank = 5; break;
+		case "Sun": $blank = 6; break;
+	}
+
+	//We then determine how many days are in the current month
+	$days_in_month = cal_days_in_month(0, $month, $year);
+
+	include_once drupal_get_path('module', 'calendar') . '/inc/calendar_calendar.class.inc';
+
+	//Here we start building the table heads
+	$calendar = new calendar($variables['language']);
+
+	//$calendar->addHeader('<a data-goto="'. $month . '-' . $year .'" href="' . '/' . $variables['language'] . '/' . locale('calendar', NULL, $variables['language']) . '/' . $month . '/' . $year . '">' . locale($title, NULL, $variables['language']) . ' ' . $year . '</a>', '1-' . intVal($month) . '-' . intval($year));
+	$calendar->addHeader($date, '1-' . intVal($month) . '-' . intval($year));
+	//This counts the days in the week, up to 7
+	$day_count = 1;
+	$calendar->openRowTag();
+
+	if($month == 1){
+		$days_in_prew_month = cal_days_in_month(0, 12, $year-1) ;
+	}else{
+		$days_in_prew_month = cal_days_in_month(0, $month-1, $year) ;
+	}
+	//first we take care of those blank days
+	while ($blank > 0) {
+		$calendar->addCell($days_in_prew_month - $blank + 1, array('day-prew-month', 'not-this-month'));
+	 	$blank = $blank - 1;
+		$day_count ++;
+	}
+
+	//sets the first day of the month to 1
+	$day_num = 1;
+
+	//Get nodes that are set to appear in calendar in this month
+	$events = _calendar_get_events_for_compose_view($variables);
+
+	//count up the days, untill we've done all of them in the month
+	while ($day_num <= $days_in_month) {
+		$classes  = array('day-cell');
+		if ($day_num == $today_day && $today_month == $month && $today_year == $year) $classes[] = 'today-day-class';
+
+		if($day_count >= 7) {
+			$classes[] = 'day-cell-right';
+		}
+
+		if ($selected_day && $selected_day == $day_num) {
+			$classes[] = 'selected-day';
+		}
+		$day_hover_data = array();
+
+		foreach($events as $event) {
+			if($day_num == $event['day']) {
+				$day_hover_data[] = array(
+    				'nid' => $event['nid'],
+    				'title' => $event['title'],
+				);
+				$classes[] = 'day-cell-event';
+        $classes[] = 'event-tid-' . $event['tid'];
+			}
+		}
+		$dayString = sprintf("%02d", $day_num);
+		$value = "<a href='?date={$year}-{$month}-{$dayString}'>{$day_num}</a>";
+		$calendar->addCell($value, $classes, $day_hover_data, $language);
+		$day_num++;
+		$day_count++;
+
+		//Make sure we start a new row every week
+		if ($day_count > 7) {
+			$calendar->closeRowTag();
+			$calendar->openRowTag();
+			$day_count = 1;
+		}
+	}
+
+	//Finaly we finish out the table with some blank details if needed
+	$day_next_month = 1;
+	while ($day_count > 1 && $day_count <= 7) {
+		$classes = array('day-cell');
+		$classes[] = 'day-next-month';
+		$classes[] = 'not-this-month';
+		if($day_count >= 7) {
+			$classes[] = 'day-cell-right';
+		}
+		$calendar->addCell($day_next_month, $classes);
+		$day_next_month++;
+		$day_count++;
+	}
+	$calendar->closeRowTag();
+
+	return $calendar->finish();
+}
+
+/**
+ * Gets events for given month and year - compose view
+ *
+ * @param $variables
+ * @return array
+ */
+function _calendar_get_events_for_compose_view($variables) {
+
+//  if(!db_table_exists(calendar_CALENDAR_DATE_FIELD_TABLE)) {
+//	watchdog('calendar', 'Content type should have field: ' . calendar_CALENDAR_DATE_FIELD_NAME . ' in order to display events in calendar.');
+//	return array();
+//  }
+//
+//  $month = !empty($variables['month']) ? $variables['month'] : format_date(time(), 'custom', 'm');
+//  $year = !empty($variables['year']) ? $variables['year'] : format_date(time(), 'custom', 'Y');
+//
+//  $date_field_name_from = 'field_' . calendar_CALENDAR_DATE_FIELD_NAME . '_value';
+//  $date_field_name_to = 'field_' . calendar_CALENDAR_DATE_FIELD_NAME . '_value2';
+//
+//  $query = db_query("SELECT n.`nid`, n.`title`, n.`created`, t.`".$date_field_name_from."`, t.`".$date_field_name_to."` FROM `node` n JOIN `" . calendar_CALENDAR_DATE_FIELD_TABLE . "` t on t.`entity_id`=n.`nid`
+//                    WHERE n.`status` = 1
+//                    AND
+//                      n.type IN ('news')
+//                    AND
+//                      (
+//                        EXTRACT(YEAR FROM t.".$date_field_name_from.") <= ". intval($year) ."
+//                        AND
+//                        EXTRACT(YEAR FROM t.".$date_field_name_to.") >= ". intval($year) ."
+//                        AND
+//                        EXTRACT(MONTH FROM t.".$date_field_name_from.") <= ". intval($month) ."
+//                        AND
+//                        EXTRACT(MONTH FROM t.".$date_field_name_to.") >= ". intval($month) ."
+//                      )
+//                    ORDER BY t.`".$date_field_name_from."` DESC");
+//  $res = $query->fetchAll();
+//
+//  $events = array();
+//  foreach ($res as $row) {
+//    $node = node_load($row->nid);
+//    $tid = 0;
+//    if(!empty($node->field_event_type)){
+//      $tid = $node->field_event_type[LANGUAGE_NONE][0]['tid'];
+//    }
+//
+//    $day_from = intval(format_date(strtotime($row->{$date_field_name_from}), 'custom', 'd'));
+//    $month_from = intval(format_date(strtotime($row->{$date_field_name_from}), 'custom', 'm'));
+//    $year_from = intval(format_date(strtotime($row->{$date_field_name_from}), 'custom', 'Y'));
+//    $day_to = intval(format_date(strtotime($row->{$date_field_name_to}), 'custom', 'd'));
+//    $month_to = intval(format_date(strtotime($row->{$date_field_name_to}), 'custom', 'm'));
+//    $year_to = intval(format_date(strtotime($row->{$date_field_name_to}), 'custom', 'Y'));
+//
+//    if ($month == $month_from && $month == $month_to){
+//      for($ii=$day_from; $ii<=$day_to; $ii++){
+//      	$events[]= array(
+//    		'title' => $row->title,
+//        'tid' => $tid,
+//    		'nid' => $row->nid,
+//    		'day' => $ii,
+//    	    'day_from' => $day_from,
+//    	    'month_from' => $month_from,
+//    	    'year_from' => $year_from,
+//      	);
+//      }
+//    }elseif($month == $month_from){
+//      for($ii=$day_from; $ii <= cal_days_in_month(0, $month, $year); $ii++){
+//      	$events[]= array(
+//      		'title' => $row->title,
+//          'tid' => $tid,
+//      		'nid' => $row->nid,
+//      		'day' => $ii,
+//      	    'day_from' => $day_from,
+//      	    'month_from' => $month_from,
+//      	    'year_from' => $year_from,
+//      	);
+//      }
+//    }elseif($month == $month_to){
+//      for($ii=1; $ii<=$day_to; $ii++){
+//      	$events[]= array(
+//      		'title' => $row->title,
+//          'tid' => $tid,
+//      		'nid' => $row->nid,
+//      		'day' => $ii,
+//      	    'day_from' => $day_from,
+//      	    'month_from' => $month_from,
+//      	    'year_from' => $year_from,
+//      	);
+//      }
+//    }elseif($month > $month_from && $month < $month_to){
+//      for($ii=1; $ii<=cal_days_in_month(0, $month, $year); $ii++){
+//      	$events[]= array(
+//      		'title' => $row->title,
+//          'tid' => $tid,
+//      		'nid' => $row->nid,
+//      		'day' => $ii,
+//      	    'day_from' => $day_from,
+//      	    'month_from' => $month_from,
+//      	    'year_from' => $year_from,
+//      	);
+//      }
+//    }
+//
+//  }
+
+//  return $events;
+	return array();
+}
+
+function __calendar_sort_events_by_from_date($events_unsorted){
+  $sorted = array();
+  $part_sorted = array();
+
+  foreach ($events_unsorted as $event){
+    if($event['month_from'] == $event['month']) $key = $event['day_from'];
+    else $key = 1;
+    $part_sorted[$key][] = $event;
+  }
+
+  ksort($part_sorted);
+
+  foreach ($part_sorted as $day_events){
+    foreach($day_events as $event){
+      $sorted[] = $event;
+    }
+  }
+
+  return $sorted;
+}
+
+/**
+ * Gets events for given month and year
+ *
+ * @param $variables
+ * @return array
+ */
+function _calendar_get_events($variables) {
+//	if(!db_table_exists(calendar_CALENDAR_DATE_FIELD_TABLE)) {
+// 		watchdog('calendar', 'Content type should have field: ' . calendar_CALENDAR_DATE_FIELD_NAME . ' in order to display events in calendar.');
+// 		return array();
+// 	}
+//
+//	$day = !empty($variables['day']) ? intval($variables['day']) : '';
+//	$month = !empty($variables['month']) ? intval($variables['month']) : format_date(time(), 'custom', 'm');
+//	$year = !empty($variables['year']) ? intval($variables['year']) : format_date(time(), 'custom', 'Y');
+//
+//	$date_field_name_from = 'field_' . calendar_CALENDAR_DATE_FIELD_NAME . '_value';
+//	$date_field_name_to = 'field_' . calendar_CALENDAR_DATE_FIELD_NAME . '_value2';
+//
+//	$query = db_select('node', 'n')->fields('n', array('nid', 'title', 'created'));
+//	$query->condition('n.status', 1);
+// 	$query->condition('n.type', array('event', 'news'), 'IN');
+//
+// 	$res = $query->execute();
+// 	$events = array();
+//
+//	while($row = $res->fetchObject()) {
+//
+//		$q = db_select(calendar_CALENDAR_DATE_FIELD_TABLE, 't')->fields('t', array($date_field_name_from, $date_field_name_to))->condition('entity_id', $row->nid);
+//
+//		$day_from = intval(format_date($row->created, 'custom', 'd'));
+//		$month_from = intval(format_date($row->created, 'custom', 'm'));
+//		$year_from = intval(format_date($row->created, 'custom', 'Y'));
+//		$day_to = intval(format_date($row->created, 'custom', 'd'));
+//		$month_to = intval(format_date($row->created, 'custom', 'm'));
+//		$year_to = intval(format_date($row->created, 'custom', 'Y'));
+//		$r = $q->execute();
+//		if($rw = $r->fetchObject()) {
+//			$day_from = intval(format_date(strtotime($rw->{$date_field_name_from}), 'custom', 'd'));
+//			$month_from = intval(format_date(strtotime($rw->{$date_field_name_from}), 'custom', 'm'));
+//			$year_from = intval(format_date(strtotime($rw->{$date_field_name_from}), 'custom', 'Y'));
+//			$day_to = intval(format_date(strtotime($rw->{$date_field_name_to}), 'custom', 'd'));
+//			$month_to = intval(format_date(strtotime($rw->{$date_field_name_to}), 'custom', 'm'));
+//			$year_to = intval(format_date(strtotime($rw->{$date_field_name_to}), 'custom', 'Y'));
+//		}
+//
+//		if($year != $year_from || $year != $year_to) continue;
+//		if($month < $month_from  || $month > $month_to) continue;
+//
+//		$events[]= array(
+//			'title' => $row->title,
+//			'nid' => $row->nid,
+//			'day_from' => $day_from,
+//		    'day_to' => $day_to,
+//  			'month_from' => $month_from,
+//		    'month_to' => $month_to,
+//  			'year_from' => $year_from,
+//		    'year_to' => $year_to,
+//		    'month' => $month,
+//            'year' => $year,
+//		);
+//	}
+//	return $events;
+	return array();
+}
+
+
+/**
+ * Get sumarry on trimmed body from a node
+ *
+ * @param $node
+ * @return mixed|string
+ */
+function _calendar_get_summary_or_body_trimmed($node) {
+    $lang = $node->language;
+    $body = '';
+	if(!empty($node->body)) {
+	    $bodyVal = strip_tags($node->body[$lang][0]['value']);
+		$body = views_trim_text(array('max_length' => 400, 'word_boundary' => true, 'ellipsis' => '...'), $bodyVal) ;
+	}
+
+	return $body;
+}

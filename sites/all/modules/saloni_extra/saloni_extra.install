@@ -1,0 +1,611 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */
+function salon_forms_install() {
+    db_insert('salon_tip_zaposlenja')
+        ->fields(array(
+            'naziv' => 'Frizer',
+            'created_by' => '1',
+            'created_on' => date("Y-m-d H:i:s", time()),
+            )
+        )->execute();
+    db_insert('salon_tip_zaposlenja')
+        ->fields(array(
+                'naziv' => 'Masazer',
+                'created_by' => '1',
+                'created_on' => date("Y-m-d H:i:s", time()),
+                )
+        )->execute();
+    db_insert('salon_tip_zaposlenja')
+        ->fields(array(
+            'naziv' => 'Kozmeticar',
+            'created_by' => '1',
+            'created_on' => date("Y-m-d H:i:s", time()),
+            )
+        )->execute();
+
+    /**--------------------------------------**/
+    db_insert('salon_tip_usluga')
+        ->fields(array(
+                'naziv' => 'Frizer',
+                'created_by' => '1',
+                'created_on' => date("Y-m-d H:i:s", time()),
+            )
+        )->execute();
+    db_insert('salon_tip_usluga')
+        ->fields(array(
+                'naziv' => 'Solarijum',
+                'created_by' => '1',
+                'created_on' => date("Y-m-d H:i:s", time()),
+            )
+        )->execute();
+    db_insert('salon_tip_usluga')
+        ->fields(array(
+                'naziv' => 'Kozmeticar',
+                'created_by' => '1',
+                'created_on' => date("Y-m-d H:i:s", time()),
+            )
+        )->execute();
+    db_insert('salon_tip_usluga')
+        ->fields(array(
+                'naziv' => 'Masaza',
+                'created_by' => '1',
+                'created_on' => date("Y-m-d H:i:s", time()),
+            )
+        )->execute();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function salon_forms_uninstall() {
+}
+
+/**
+ * Implements hook_schema().
+ */
+function salon_forms_schema() {
+    $schema['salon_tip_zaposlenja'] = array(
+        'description' => t('Employees table'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('Identifier.'),
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'naziv' => array(
+                'description' => t('Tip zaposlenja.'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'created_by' => array(
+                'description' => t('Created by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'created_on' => array(
+                'description' => t('Created on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'modified_by' => array(
+                'description' => t('Modified by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'modified_on' => array(
+                'description' => t('Modified on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+        ),
+        'primary key' => array('id'),
+    );
+    $schema['salon_zaposleni'] = array(
+        'description' => t('Employees table'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('Employee identifier.'),
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'ime' => array(
+                'description' => t('First name.'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'prezime' => array(
+                'description' => t('Last name.'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'jmbg' => array(
+                'description' => t('JMBG'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'brlk' => array(
+                'description' => t('Br. LK'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'adresa' => array(
+                'description' => t('Adresa'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'br_telefona' => array(
+                'description' => t('Br. telefona'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'br_mobilnog_telefona' => array(
+                'description' => t('Br. mobilnog telefona'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'email' => array(
+                'description' => t('Email'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'procenat' => array(
+                'description' => t('Procenat'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'tip_zaposlenog' => array(
+                'description' => t('Tip zaposlenog'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'created_by' => array(
+                'description' => t('Created by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'created_on' => array(
+                'description' => t('Created on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'modified_by' => array(
+                'description' => t('Modified by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'modified_on' => array(
+                'description' => t('Modified on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'id_firme' => array(
+                'description' => t('Id firme'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+        ),
+        'foreign keys' => array(
+            'tip_zaposlenog' => array(
+                'table' => 'tip_zaposlenja',
+                'columns' => array('tip_zaposlenog' => 'id'),
+            ),
+        ),
+        'primary key' => array('id'),
+    );
+    $schema['salon_tip_usluga'] = array(
+        'description' => t('Tip Usluga'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('Identifier.'),
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'naziv' => array(
+                'description' => t('Opis'),
+                'type' => 'varchar',
+                'length' => 255,
+                'default' => NULL,
+            ),
+            'created_by' => array(
+                'description' => t('Created by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'created_on' => array(
+                'description' => t('Created on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'modified_by' => array(
+                'description' => t('Modified by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'modified_on' => array(
+                'description' => t('Modified on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+        ),
+        'primary key' => array('id'),
+    );
+    $schema['salon_grupa_usluga'] = array(
+        'description' => t('Grupa Usluga'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('Identifier.'),
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'opis' => array(
+                'description' => t('Opis'),
+                'type' => 'varchar',
+                'length' => 255,
+                'default' => NULL,
+            ),
+            'tip_grupa_usluga' => array(
+                'description' => t('Tip grupe usluge'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'created_by' => array(
+                'description' => t('Created by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'created_on' => array(
+                'description' => t('Created on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'modified_by' => array(
+                'description' => t('Modified by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'modified_on' => array(
+                'description' => t('Modified on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'id_firme' => array(
+                'description' => t('Id firme'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+        ),
+        'foreign keys' => array(
+            'tip_grupa_usluga_fk1' => array(
+                'table' => 'salon_tip_usluga',
+                'columns' => array('tip_grupa_usluga' => 'id'),
+            ),
+        ),
+        'primary key' => array('id'),
+    );
+    $schema['salon_usluga'] = array(
+        'description' => t('Usluga'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('Identifier.'),
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'grupa_usluga' => array(
+                'description' => t('Grupa usluga'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'opis' => array(
+                'description' => t('Cena'),
+                'type' => 'varchar',
+                'length' => 255,
+                'default' => NULL,
+            ),
+            'cena' => array(
+                'description' => t('Cena'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'kod' => array(
+                'description' => t('Kod'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'created_by' => array(
+                'description' => t('Created by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'created_on' => array(
+                'description' => t('Created on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'modified_by' => array(
+                'description' => t('Modified by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'modified_on' => array(
+                'description' => t('Modified on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'id_firme' => array(
+                'description' => t('Id firme'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+        ),
+        'foreign keys' => array(
+            'salon_grupa_usluga_fk1' => array(
+                'table' => 'salon_grupa_usluga',
+                'columns' => array('grupa_usluga' => 'id'),
+            ),
+        ),
+        'primary key' => array('id'),
+    );
+    $schema['salon_klijent'] = array(
+        'description' => t('Klijent'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('Identifier.'),
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'ime' => array(
+                'description' => t('First name.'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'prezime' => array(
+                'description' => t('Last name.'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'adresa' => array(
+                'description' => t('Adresa'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'br_telefona' => array(
+                'description' => t('Br. telefona'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'br_mobilnog_telefona' => array(
+                'description' => t('Br. mobilnog telefona'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'email' => array(
+                'description' => t('Email'),
+                'type' => 'varchar',
+                'length' => 64,
+                'default' => NULL,
+            ),
+            'datum_rodjenja' => array(
+                'description' => t('Datum rodjenja'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'napomena' => array(
+                'description' => t('Napomena'),
+                'type' => 'varchar',
+                'length' => 255,
+                'default' => NULL,
+            ),
+            'datum_registrovanja' => array(
+                'description' => t('Datum registrovanja'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'popust' => array(
+                'description' => t('Datum registrovanja'),
+                'type' => 'float',
+                'default' => NULL,
+            ),
+            'created_by' => array(
+                'description' => t('Created by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'created_on' => array(
+                'description' => t('Created on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'modified_by' => array(
+                'description' => t('Modified by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'modified_on' => array(
+                'description' => t('Modified on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'id_firme' => array(
+                'description' => t('Id firme'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+        ),
+        'foreign keys' => array(
+            'grupa_usluga_fk1' => array(
+                'table' => 'salon_grupa_usluga',
+                'columns' => array('grupa_usluga' => 'id'),
+            ),
+        ),
+        'primary key' => array('id'),
+    );
+    $schema['salon_termin'] = array(
+        'description' => t('Termin'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('Identifier.'),
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'id_klijent' => array(
+                'description' => t('Id firme'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'id_zaposlenog' => array(
+                'description' => t('Id zaposenog'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'id_usluge' => array(
+                'description' => t('Id usluge'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'termin_od' => array(
+                'description' => t('Termin od'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'termin_do' => array(
+                'description' => t('Termin do'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'datum_rezervacije' => array(
+                'description' => t('Datum rezervisanja'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'datum_termina' => array(
+                'description' => t('Datum termina'),
+                'type' => 'varchar',
+                'mysql_type' => 'date',
+                'default' => NULL,
+            ),
+            'cena' => array(
+                'description' => t('Cena'),
+                'type' => 'float',
+                'default' => NULL,
+            ),
+            'cena_bez_popusta' => array(
+                'description' => t('Cena bez popusta'),
+                'type' => 'float',
+                'default' => NULL,
+            ),
+            'created_by' => array(
+                'description' => t('Created by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'created_on' => array(
+                'description' => t('Created on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'modified_by' => array(
+                'description' => t('Modified by'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+            'modified_on' => array(
+                'description' => t('Modified on'),
+                'type' => 'varchar',
+                'mysql_type' => 'datetime',
+                'default' => NULL,
+            ),
+            'id_firme' => array(
+                'description' => t('Id firme'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'default' => NULL,
+            ),
+        ),
+        'foreign keys' => array(
+            'id_klijent_fk1' => array(
+                'table' => 'salon_klijent',
+                'columns' => array('id_klijent' => 'id'),
+            ),
+            'id_zaposlenog_fk2' => array(
+                'table' => 'salon_zaposleni',
+                'columns' => array('id_zaposlenog' => 'id'),
+            ),
+            'id_usluge_fk3' => array(
+                'table' => 'salon_usluga',
+                'columns' => array('id_usluge' => 'id'),
+            ),
+        ),
+        'primary key' => array('id'),
+    );
+    return $schema;
+}
+

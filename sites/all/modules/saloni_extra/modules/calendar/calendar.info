@@ -1,0 +1,8 @@
+name = Calendar
+description = Displays calendar
+core = 7.x
+version = "7.x-0.1"
+
+dependencies[]= views
+dependencies[]= date
+dependencies[]= libraries

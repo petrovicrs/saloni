@@ -1,0 +1,6 @@
+name = Pathauto ASCII
+description = Generate aliases using only ASCII characters.
+dependencies[] = pathauto
+core = 7.x
+
+;configure = admin/config/search/path/patterns

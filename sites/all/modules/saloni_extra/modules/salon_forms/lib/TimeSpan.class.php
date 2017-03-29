@@ -272,5 +272,22 @@ class TimeSpan {
         return $this->totalSeconds() == $compareTo->totalSeconds();
     }
 
+    /**
+     * @param TimeSpan $from
+     * @param TimeSpan $to
+     * @return bool
+     */
+    public function isBetween(TimeSpan $from, TimeSpan $to) {
+        return $this->greaterOrEqualThan($from) && $this->lessOrEqualThan($to);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function isValid() {
+        $dayStart = self::create(0, 0, 0);
+        $dayEnd = self::create(23, 59, 59);
+        return $this->isBetween($dayStart, $dayEnd);
+    }
 }
 

@@ -126,6 +126,10 @@
     <!-- !Messages and Help -->
     <?php print render($page['help']); ?>
 
+    <?php if ($messages): ?>
+      <div id="console" class="clearfix"><?php print $messages; ?></div>
+    <?php endif; ?>
+
     <!-- !Secondary Content Region -->
     <?php print render($page['secondary_content']); ?>
 

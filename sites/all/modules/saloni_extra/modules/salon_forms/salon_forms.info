@@ -6,6 +6,7 @@ files[] = lib/DateAndTime.class.php
 files[] = lib/TimeSpan.class.php
 files[] = lib/CompanyDatabase.class.php
 files[] = inc/SalonTimeSpanTable.class.php
+files[] = lib/entity/AppointmentEntity.class.php
 files[] = lib/entity/SaloonEntityInterface.class.php
 files[] = lib/entity/SaloonEntity.class.php
 files[] = lib/entity/ClientEntity.class.php

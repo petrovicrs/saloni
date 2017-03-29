@@ -1,6 +1,6 @@
 <?php
 
-include __DIR__ . '../lib/TimeSpan.class.php';
+include drupal_get_path('module', 'salon_forms') . '/lib/TimeSpan.class.php';
 
 class SalonTimeSpanTable {
 

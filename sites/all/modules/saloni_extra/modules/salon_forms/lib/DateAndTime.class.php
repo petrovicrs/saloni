@@ -18,6 +18,13 @@ class DateAndTime {
     }
 
     /**
+     * @return int
+     */
+    public function getTimestamp() {
+        return (int)$this->timestamp;
+    }
+
+    /**
      * @return DateAndTime
      */
     public static function now() {
@@ -36,7 +43,14 @@ class DateAndTime {
      * @return bool|string
      */
     public function toDMYString() {
-        return date('d.m.Y.', $this->timestamp);
+        return $this->toString('d.m.Y.');
+    }
+
+    /**
+     * @return bool|string
+     */
+    public function toYMDString() {
+        return $this->toString('Y-m-d');
     }
 
     /**
@@ -81,4 +95,51 @@ class DateAndTime {
     public function getDay() {
         return date('d', $this->timestamp);
     }
+
+    /**
+     * @param $dateString
+     * @param string $format
+     * @return bool
+     */
+    public static function isValid($dateString, $format = 'Y-m-d') {
+        return $dateString == self::fromYMDString($dateString)->toString($format);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInFuture() {
+        $now = self::now();
+        return self::compareDates($this, $now) > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInPast() {
+        $now = self::now();
+        return self::compareDates($now, $this) > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isToday() {
+        $my = $this->toYMDString();
+        $now = date('Y-m-d');
+        $result = $my == $now;
+        return $result;
+    }
+
+
+    /**
+     * @static
+     * @param DateAndTime $from
+     * @param DateAndTime $to
+     * @return int Returns &lt;0 if $from is less than $to; &gt;0 if $from is greater than $to; and 0 if they are equal
+     */
+    public static function compareDates(DateAndTime $from, DateAndTime $to) {
+        return $from->getTimestamp() - $to->getTimestamp();
+    }
+
 }

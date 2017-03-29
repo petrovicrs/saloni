@@ -45,11 +45,12 @@ abstract class SaloonEntity implements SaloonEntityInterface {
 
     /**
      * @param $colName
+     * @param $condition
      * @return array
      */
-    public function getColWithIds($colName) {
+    public function getColWithIds($colName, $condition = '1=1') {
         db_set_active(CompanyDatabase::resolveDatabaseName(getUserFirma()));
-        $queryResults = db_query("select id, {$colName} from {$this->tableName} ")->fetchAll();
+        $queryResults = db_query("select id, {$colName} from {$this->tableName} WHERE {$condition}}")->fetchAll();
         db_set_active();
         $results = [];
         foreach($queryResults as $result) {
@@ -63,7 +64,7 @@ abstract class SaloonEntity implements SaloonEntityInterface {
      * @param $condition
      * @return array
      */
-    public function getColsWithIdsWithCondition(array $colNames, $condition) {
+    public function getCols(array $colNames, $condition = '1=1') {
         if (count($colNames) == 0) {
             $select = '*';
         } else {

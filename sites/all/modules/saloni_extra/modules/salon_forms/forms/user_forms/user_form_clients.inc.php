@@ -243,12 +243,3 @@ function salon_forms_clients_delete_submit($form, &$form_state) {
     drupal_set_message(t('You have successfully deleted client.'));
     return $form;
 }
-
-function _client_autocomplete($string) {
-    $matches = [];
-    $results = ClientEntity::create()->getColsWithIdsWithCondition(array('id', 'ime', 'prezime'), 'ime LIKE \'%'.$string.'%\' OR prezime LIKE \'%'.$string.'%\'');
-    foreach($results as $result) {
-        $matches[$result->ime . ' ' . $result->prezime] = $result->ime . ' ' . $result->prezime;
-    }
-    drupal_json_output($matches);
-}

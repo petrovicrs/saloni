@@ -9,13 +9,9 @@ function salon_forms_init() {
         drupal_add_css($module_path . '/styles/table.css');
         drupal_add_css($module_path . '/styles/pages.css');
         drupal_add_css($module_path . '/styles/menu.css');
-        drupal_add_css('sites/all/libraries/timepicker/jquery.timepicker.css');
-        drupal_add_js('sites/all/libraries/timepicker/jquery.timepicker.min.js');
-        drupal_add_js($module_path . '/scripts/forms.js');
         if (!(strpos(current_path(), 'user/') !== false)) {
             drupal_add_css($module_path . '/styles/forms.css');
         }
-
     }
 }
 
@@ -44,10 +40,26 @@ function salon_forms_menu() {
         'file' => 'forms/user_forms/user_form_sisanje.inc.php'
     );
 
+    $items['zakazi-termin-sisanja'] = array(
+        'title' => t('Zakazi termin sisanja'),
+        'page callback' => 'salon_forms_sisanje_zakazi',
+        'access arguments' => array('administrator admin_lokala'),
+        'type' => MENU_CALLBACK,
+        'file' => 'forms/user_forms/user_form_sisanje.inc.php'
+    );
+
     /** kozmeticar **/
     $items['prikaz-termina-kozmeticara'] = array(
         'title' => t('Prikaz termina kozmeticara'),
         'page callback' => 'salon_forms_kozmeticar',
+        'access arguments' => array('administer admin_lokala'),
+        'type' => MENU_CALLBACK,
+        'file' => 'forms/user_forms/user_form_kozmeticar.inc.php'
+    );
+
+    $items['zakazi-termin-kozmeticara'] = array(
+        'title' => t('Zakazi termin kozmeticara'),
+        'page callback' => 'salon_forms_kozmeticar_zakazi',
         'access arguments' => array('administer admin_lokala'),
         'type' => MENU_CALLBACK,
         'file' => 'forms/user_forms/user_form_kozmeticar.inc.php'
@@ -61,11 +73,25 @@ function salon_forms_menu() {
         'type' => MENU_CALLBACK,
         'file' => 'forms/user_forms/user_form_solarijuma.inc.php'
     );
+    $items['zakazi-termin-solarijuma'] = array(
+        'title' => t('Zakazi termin solarijuma'),
+        'page callback' => 'salon_forms_solarijuma_zakazi',
+        'access arguments' => array('administrator admin_lokala'),
+        'type' => MENU_CALLBACK,
+        'file' => 'forms/user_forms/user_form_solarijuma.inc.php'
+    );
 
     /** masaza **/
     $items['prikaz-termina-masaze'] = array(
         'title' => t('Prikaz termina masaze'),
         'page callback' => 'salon_forms_masaza',
+        'access arguments' => array('administrator admin_lokala'),
+        'type' => MENU_CALLBACK,
+        'file' => 'forms/user_forms/user_form_masaza.inc.php'
+    );
+    $items['zakazi-termin-masaze'] = array(
+        'title' => t('Zakazi termin masaze'),
+        'page callback' => 'salon_forms_masaza_zakazi',
         'access arguments' => array('administrator admin_lokala'),
         'type' => MENU_CALLBACK,
         'file' => 'forms/user_forms/user_form_masaza.inc.php'
@@ -104,12 +130,12 @@ function salon_forms_menu() {
         'page arguments' => array('salon_forms_clients_delete', 2),
         'access arguments' => array('administrator admin_lokala'),
     );
-    $items['klijenti/autocomplete'] = array(
+    /** services autocomplete **/
+    $items['services/autocomplete'] = array(
         'title' => '',
-        'page callback' => '_client_autocomplete',
+        'file' => 'forms/form_autocomplete.inc.php',
+        'page callback' => 'form_services_autocomplete',
         'access arguments' => array('administrator admin_lokala'),
-        'file' => 'forms/user_forms/user_form_clients.inc.php',
-        'type' => MENU_CALLBACK
     );
     /** Firma forms **/
     $items['admin/saloon'] = array(
@@ -326,4 +352,47 @@ function includeModalWindowSettings() {
         ),
     );
     drupal_add_js($style, 'setting');
+}
+
+function getConfigByType($configType) {
+    $configs = getFormsConfigs();
+    $config = false;
+    if (isset($configs[$configType])) {
+        $config = $configs[$configType];
+    }
+    return $config;
+}
+
+function getFormConfig($configType, $configName) {
+    $configs = getFormsConfigs();
+    $config = false;
+    if (isset($configs[$configType]) && isset($configs[$configType][$configName])) {
+        $config = $configs[$configType][$configName];
+    }
+    return $config;
+}
+
+function getFormsConfigs() {
+    return array(
+        'frizer' => array(
+            'od' => '09:00',
+            'do' => '21:30',
+            'interval' => '30',
+        ),
+        'kozmeticar' => array(
+            'od' => '09:00',
+            'do' => '21:30',
+            'interval' => '30',
+        ),
+        'solarijum' => array(
+            'od' => '09:00',
+            'do' => '22:00',
+            'interval' => '20',
+        ),
+        'masaza' => array(
+            'od' => '09:00',
+            'do' => '21:30',
+            'interval' => '30',
+        ),
+    );
 }

@@ -7,12 +7,14 @@ function salon_forms_init() {
     if (!path_is_admin(current_path())) {
         $module_path = drupal_get_path('module', 'salon_forms');
         drupal_add_css($module_path . '/styles/table.css');
-        drupal_add_css($module_path . '/styles/forms.css');
         drupal_add_css($module_path . '/styles/pages.css');
         drupal_add_css($module_path . '/styles/menu.css');
         drupal_add_css('sites/all/libraries/timepicker/jquery.timepicker.css');
         drupal_add_js('sites/all/libraries/timepicker/jquery.timepicker.min.js');
         drupal_add_js($module_path . '/scripts/forms.js');
+        if (!(strpos(current_path(), 'user/') !== false)) {
+            drupal_add_css($module_path . '/styles/forms.css');
+        }
 
     }
 }
@@ -22,6 +24,17 @@ function salon_forms_init() {
  */
 function salon_forms_menu() {
     $items = array();
+
+    /** zakazi **/
+    $items['zakazi-termin'] = array(
+        'title' => t('Zakazi'),
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('salon_forms_zakazi_form'),
+        'file' => 'forms/user_forms/user_form_zakazi.inc.php',
+        'access arguments' => array('administrator admin_lokala'),
+        'type' => MENU_NORMAL_ITEM,
+    );
+
     /** sisanje **/
     $items['prikaz-termina-sisanja'] = array(
         'title' => t('Prikaz termina sisanja'),
@@ -29,14 +42,6 @@ function salon_forms_menu() {
         'access arguments' => array('administrator admin_lokala'),
         'type' => MENU_CALLBACK,
         'file' => 'forms/user_forms/user_form_sisanje.inc.php'
-    );
-    $items['zakazi-termina-sisanja'] = array(
-        'title' => t('Zakazi'),
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('salon_forms_sisanje_zakazi_form'),
-        'file' => 'forms/user_forms/user_form_sisanje.inc.php',
-        'access arguments' => array('administrator admin_lokala'),
-        'type' => MENU_NORMAL_ITEM,
     );
 
     /** kozmeticar **/

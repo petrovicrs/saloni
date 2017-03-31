@@ -34,11 +34,12 @@ abstract class SaloonEntity implements SaloonEntityInterface {
 
     /**
      * @param $colName
+     * @param $condition
      * @return mixed
      */
-    public function getCol($colName) {
+    public function getCol($colName, $condition = '1=1') {
         db_set_active(CompanyDatabase::resolveDatabaseName(getUserFirma()));
-        $result = db_query("select {$colName} from {$this->tableName} ")->fetchCol();
+        $result = db_query("select {$colName} from {$this->tableName} WHERE {$condition}")->fetchCol();
         db_set_active();
         return $result;
     }

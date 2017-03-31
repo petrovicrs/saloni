@@ -1,5 +1,10 @@
 <?php
 
+define('TYPE_FRIZER', 'frizer');
+define('TYPE_MASAZA', 'masaza');
+define('TYPE_SOLARIJUM', 'solarijum');
+define('TYPE_KOZMETICAR', 'kozmeticar');
+
 /**
  * Implements hook_init
  */
@@ -374,22 +379,22 @@ function getFormConfig($configType, $configName) {
 
 function getFormsConfigs() {
     return array(
-        'frizer' => array(
+        TYPE_FRIZER => array(
             'od' => '09:00',
             'do' => '21:30',
             'interval' => '30',
         ),
-        'kozmeticar' => array(
+        TYPE_KOZMETICAR => array(
             'od' => '09:00',
             'do' => '21:30',
             'interval' => '30',
         ),
-        'solarijum' => array(
+        TYPE_SOLARIJUM => array(
             'od' => '09:00',
             'do' => '22:00',
             'interval' => '20',
         ),
-        'masaza' => array(
+        TYPE_MASAZA => array(
             'od' => '09:00',
             'do' => '21:30',
             'interval' => '30',

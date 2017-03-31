@@ -31,6 +31,7 @@ function salon_forms_zakazi_form($form, &$form_state) {
         '#title' => t('Usluga'),
         '#options' => array(),
         '#required' => TRUE,
+        '#validated' => TRUE,
     );
     $form['id_zaposlenog'] = array(
         '#type' => 'select',

@@ -5,6 +5,7 @@ core = 7.x
 files[] = lib/DateAndTime.class.php
 files[] = lib/TimeSpan.class.php
 files[] = lib/CompanyDatabase.class.php
+files[] = lib/AppointmentHelper.class.php
 files[] = inc/SalonTimeSpanTable.class.php
 files[] = lib/entity/AppointmentEntity.class.php
 files[] = lib/entity/SaloonEntityInterface.class.php

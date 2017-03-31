@@ -1,7 +1,8 @@
 <?php
 
-include drupal_get_path('module', 'salon_forms') . '/lib/TimeSpan.class.php';
-
+/**
+ * Class SalonTimeSpanTable
+ */
 class SalonTimeSpanTable {
 
     const MIN_30 = 30;
@@ -32,9 +33,9 @@ class SalonTimeSpanTable {
      * @param $step
      */
     public function __construct($start = 0, $end = 24, $step = self::MIN_30) {
-        $this->start_time = $start;
-        $this->end_time = $end;
-        $this->step = $step;
+        $this->start_time = (int)$start;
+        $this->end_time = (int)$end;
+        $this->step = (int)$step;
     }
 
     public function getHtml($data = [], $header = [], $table_id = 'timespan-table') {
@@ -112,7 +113,7 @@ class SalonTimeSpanTable {
      */
     public function createTimeSpanArray() {
         $times = array();
-        for ($h = $this->start_time; $h < $this->end_time; $h++){
+        for ($h = $this->start_time; $h <= $this->end_time; $h++){
             for ($m = 0; $m < 60 ; $m += $this->step){
                 $times[] = TimeSpan::create((int)$h, (int)$m, 0);
             }

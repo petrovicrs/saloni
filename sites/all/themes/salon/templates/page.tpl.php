@@ -121,7 +121,7 @@
 <!--    --><?php //if ($primary_navigation): print $primary_navigation; endif; ?>
 
     <!-- !Breadcrumbs -->
-    <?php if ($breadcrumb): print $breadcrumb; endif; ?>
+    <?php /*if ($breadcrumb): print $breadcrumb; endif; */?>
 
     <!-- !Messages and Help -->
     <?php print render($page['help']); ?>

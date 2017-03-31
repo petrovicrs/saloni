@@ -61,6 +61,13 @@ class TimeSpan {
     }
 
     /**
+     * @return TimeSpan
+     */
+    public static function fromMinutes($minutes) {
+        return new TimeSpan($minutes * 60);
+    }
+
+    /**
      * @param $ts
      */
     private function  __construct($ts) {

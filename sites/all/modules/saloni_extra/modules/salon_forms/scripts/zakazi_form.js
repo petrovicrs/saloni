@@ -49,11 +49,11 @@ jQuery(document).ready(function($){
             }
         }
     });
-
+    var host = 'http://138.201.172.173/beautyspa';
     $('#edit-grupa-usluga').change(function() {
         var groupId = $(this).val();
         $.ajax({
-            url: "/services/autocomplete",
+            url: host + "/services/autocomplete",
             type: "POST",
             data: {groupId : groupId},
             dataType: "json",
